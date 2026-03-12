@@ -1,0 +1,89 @@
+# Виртуальное окружение
+venv/
+env/
+.venv/
+ENV/
+
+# Файлы с токенами и секретами
+.env
+.env.*
+!.env.example  # Сохраняем пример
+*.token
+*.key
+secrets/
+credentials.json
+
+# Кэш Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# База данных PostgreSQL (только для разработки)
+*.log
+pg_log/
+pg_stat/
+pg_wal/
+postgresql.conf
+postmaster.pid
+*.sql
+!database/init.sql  # Если есть файлы инициализации
+
+# Alembic миграции
+alembic/versions/*
+!alembic/versions/.gitkeep  # Сохраняем структуру
+alembic.ini
+!alembic.ini.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Логи
+*.log
+logs/
+vkinder.log
+api_responses.log
+
+# Временные файлы
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Файлы данных (создаваемые при работе бота)
+user_data/
+profiles_cache/
+search_history/
+favorites_backup.json
+blacklist_backup.json
+viewed_profiles.json
+
+# Файлы конфигурации (кроме примеров)
+config.local.*
+settings.local.py
+local_settings.py
+!alembic.ini.example
+!docker-compose.example.yml  # Если есть Docker
+
+# VKinder специфичные файлы
+*.session
+vk_api_debug.log
+api_responses.json
+tokens.json
+vk_tokens.json
+user_tokens.json
+group_tokens.json
