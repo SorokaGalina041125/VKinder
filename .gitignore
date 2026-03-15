@@ -1,0 +1,53 @@
+# Скомпилированные / оптимизированные файлы Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+
+# Виртуальное окружение
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Редакторы кода (IDE)
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Специфичные для проекта файлы
+.pytest_cache/        # Кэш тестов pytest
+.coverage             # Отчеты о покрытии кода тестами
+htmlcov/              # HTML отчеты о покрытии
+*.log                 # Лог-файлы
+
+# Файлы с секретными данными (НЕ публиковать на GitHub!)
+.env                  # Реальный файл с паролями
+.env.local            # Локальные настройки
+.env.*.local
+!.env.example         # Пример файла с переменными (можно публиковать)
+
+# Базы данных (если SQLite будет использоваться для тестов)
+*.db
+*.sqlite3
+*.sqlite
+*.db-journal
+
+# Логи установщиков
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Отчеты о тестировании
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.pytest_cache/
