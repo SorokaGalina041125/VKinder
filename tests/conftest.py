@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 # Берем настройки из .env файла
 DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
 TEST_DB_NAME = "vkinder_test"
