@@ -29,16 +29,5 @@
 #
 # print(vk.users_info())
 #
-#
-# # print(vk.users_info())
-# #
-# # load_dotenv()
-# # access_token = os.getenv('VK_USER_ID')
-# # userid = os.getenv('VK_GROUP_TOKEN')
-# #
-# # print(access_token, userid)
-# #
-#
-#
-#
+
 

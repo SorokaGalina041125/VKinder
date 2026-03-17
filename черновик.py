@@ -2,20 +2,22 @@ import os
 import requests
 from dotenv import load_dotenv
 
+from logger import logger
+
 load_dotenv()
 
 
 class VK:
     def __init__(self, access_token=None, user_id=None, version='5.199'):
         self.token = access_token or os.getenv('VK_GROUP_TOKEN')
-        self.id = user_id or os.getenv('VK_USER_ID')
+        self.id = user_id        # ID пользователя надо сделать чтоб брал откудато, по дефолту берет токен и возвращает его правообладателя
         self.version = version
         self.params = {'access_token': self.token, 'v': self.version}
         # Дополнительные атрибуты, которые заполнятся позже
         self.user_name = None
         self.user_profile_link = None
         self.user_photos_attachment = None  # строка для attachment
-
+    @logger
     def users_info(self):
         """Получает имя, фамилию и ID пользователя, сохраняет их и возвращает ссылку на профиль."""
         url = 'https://api.vk.com/method/users.get'
@@ -33,7 +35,7 @@ class VK:
         self.user_name = f"{user_data['first_name']} {user_data['last_name']}"
         self.user_profile_link = f"https://vk.com/id{self.id}"
         return self.user_profile_link
-
+    @logger
     def get_user_photos(self, count=3):
         """Получает указанное количество фотографий из профиля пользователя и формирует attachment."""
         if not self.id:
@@ -71,7 +73,7 @@ class VK:
 
 
 # Пример использования
-vk = VK()  # токен и user_id должны быть в .env файле
+vk = VK()  # тут должен быть токен группы 'он берется из env' и user_id="его id" указать надо
 
 # Получаем информацию о пользователе
 profile_link = vk.users_info()
