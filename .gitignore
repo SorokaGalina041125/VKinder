@@ -1,18 +1,34 @@
-# Скомпилированные / оптимизированные файлы Python
+# --- Специфичные для Python файлы ---
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 *.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Виртуальное окружение
+# --- Виртуальное окружение (venv) ---
 venv/
 env/
 ENV/
 env.bak/
 venv.bak/
 
-# Редакторы кода (IDE)
+# --- Редакторы кода (IDE) ---
 .vscode/
 .idea/
 *.swp
@@ -20,34 +36,33 @@ venv.bak/
 *~
 .DS_Store
 
-# Специфичные для проекта файлы
-.pytest_cache/        # Кэш тестов pytest
-.coverage             # Отчеты о покрытии кода тестами
-htmlcov/              # HTML отчеты о покрытии
-*.log                 # Лог-файлы
-
-# Файлы с секретными данными (НЕ публиковать на GitHub!)
-.env                  # Реальный файл с паролями
-.env.local            # Локальные настройки
+# --- Секреты и настройки (КРИТИЧНО!) ---
+.env
+.env.test
+.env.local
 .env.*.local
-!.env.example         # Пример файла с переменными (можно публиковать)
+# Оставляем пример для коллег
+!.env.example
 
-# Базы данных (если SQLite будет использоваться для тестов)
+# --- Базы данных ---
+# Игнорируем локальные файлы SQLite, если они появятся при тестах
 *.db
 *.sqlite3
 *.sqlite
 *.db-journal
 
-# Логи установщиков
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Отчеты о тестировании
+# --- Тестирование и отчеты ---
+.pytest_cache/
 .tox/
 .coverage
 .coverage.*
 .cache
+htmlcov/
 nosetests.xml
 coverage.xml
 *.cover
-.pytest_cache/
+
+# --- Логи ---
+*.log
+pip-log.txt
+pip-delete-this-directory.txt
