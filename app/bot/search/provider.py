@@ -9,7 +9,7 @@ from enum import Enum
 from datetime import datetime
 
 from app.config import settings
-from .vk_client import VKClient
+from .vk_client import VKClient, InvalidUserTokenError
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ class SearchContext:
     user_id: int
     criteria: any
     limit: int = 100
+    offset: int = 0
     exclude_viewed: bool = True
     exclude_blocked: bool = True
 
@@ -56,6 +57,8 @@ class ApiFastProvider(BaseProvider):
         try:
             result = self.vk.users_search(**params)
             return result.get('items', [])
+        except InvalidUserTokenError:
+            raise
         except Exception as e:
             logger.error(f"ApiFastProvider error: {e}")
             return []
@@ -64,7 +67,11 @@ class ApiFastProvider(BaseProvider):
         return "API (быстрый)"
     
     def _build_params(self, context) -> Dict:
-        params = {'has_photo': 1, 'fields': 'domain, bdate, city, sex'}
+        params = {
+            'has_photo': 1,
+            'fields': 'domain, bdate, city, sex',
+            'offset': context.offset,
+        }
         
         if context.criteria.sex:
             params['sex'] = context.criteria.sex
@@ -87,7 +94,7 @@ class ApiDeepProvider(BaseProvider):
     
     def search(self, context: SearchContext) -> List[Dict]:
         params = self._build_params(context)
-        return self.vk.search_bulk(params, context.limit)
+        return self.vk.search_bulk(params, context.limit, start_offset=context.offset)
     
     def get_method_name(self) -> str:
         return "API (глубокий, execute)"
@@ -96,6 +103,7 @@ class ApiDeepProvider(BaseProvider):
         params = {
             'has_photo': 1,
             'fields': 'domain, bdate, city, sex, books, interests, music',
+            'offset': context.offset,
         }
         
         if context.criteria.sex:
@@ -266,7 +274,8 @@ class HybridProvider(BaseProvider):
             context_copy = SearchContext(
                 user_id=context.user_id,
                 criteria=context.criteria,
-                limit=remaining * 2
+                limit=remaining * 2,
+                offset=context.offset,
             )
             
             candidates = provider.search(context_copy)

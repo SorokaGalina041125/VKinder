@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     # VK Tokens
     VK_GROUP_TOKEN: str = ""
     VK_USER_TOKEN: str = ""
+    VK_GROUP_ID: Optional[int] = None
     
     # Database
     DB_USER: str = "postgres"

@@ -3,6 +3,7 @@
 """
 import logging
 from app.bot.search.searcher import CandidateSearcher
+from app.bot.search.vk_client import InvalidUserTokenError
 from app.bot.keyboards import get_main_keyboard, get_selection_keyboard
 from app.database import crud
 from app.bot.utils import send_msg, get_last_candidate_id, get_last_candidate
@@ -12,6 +13,15 @@ logger = logging.getLogger(__name__)
 
 # Хранилище для ID кандидатов в очереди
 pending_candidate_ids = {}  # user_id: list of candidate_ids
+
+
+def _handle_invalid_user_token(vk, user_id, send_msg_func):
+    send_msg_func(
+        vk,
+        user_id,
+        "VK_USER_TOKEN недействителен или истек. Обновите пользовательский токен в `.env` и перезапустите бота.",
+        get_main_keyboard()
+    )
 
 
 def handle_search(db, vk, user_id, current_user, send_msg_func):
@@ -32,7 +42,11 @@ def handle_search(db, vk, user_id, current_user, send_msg_func):
         
         searcher = CandidateSearcher(db, settings.VK_USER_TOKEN)
         
-        candidates, remaining = searcher.search_batch(user_id, criteria, batch_size=10)
+        try:
+            candidates, remaining = searcher.search_batch(user_id, criteria, batch_size=10)
+        except InvalidUserTokenError:
+            _handle_invalid_user_token(vk, user_id, send_msg_func)
+            return
         
         if candidates:
             pending_candidate_ids[user_id] = [c.vk_id for c in candidates[1:]]
@@ -64,8 +78,11 @@ def handle_next_batch(db, vk, user_id, current_user, send_msg_func):
     
     searcher = CandidateSearcher(db, settings.VK_USER_TOKEN)
     
-    offset = crud.criteria.get_search_offset(db, user_id)
-    candidates, remaining = searcher.search_batch(user_id, criteria, batch_size=10)
+    try:
+        candidates, remaining = searcher.search_batch(user_id, criteria, batch_size=10)
+    except InvalidUserTokenError:
+        _handle_invalid_user_token(vk, user_id, send_msg_func)
+        return
     
     if candidates:
         pending_candidate_ids[user_id] = [c.vk_id for c in candidates[1:]]
@@ -88,14 +105,16 @@ def show_candidate_by_id(db, vk, user_id, candidate_id, send_msg_func, remaining
     # Проверяем доступность профиля с использованием токена пользователя
     vk_client = VKClient(settings.VK_USER_TOKEN)
     if not vk_client.check_profile_open(candidate.vk_id):
-        send_msg_func(vk, user_id, "⚠️ Профиль кандидата закрыт", get_main_keyboard())
-        return
+        crud.viewed.mark_as_viewed(db, user_id, candidate.vk_id)
+        send_msg_func(vk, user_id, "⚠️ Профиль кандидата закрыт, перехожу к следующему.", get_main_keyboard())
+        return handle_next_batch(db, vk, user_id, None, send_msg_func)
     
     # Получаем фото
     attachments = crud.content.get_user_photos(db, candidate.vk_id)
     photos_count = len(attachments.split(',')) if attachments else 0
     
     if photos_count == 0:
+        crud.viewed.mark_as_viewed(db, user_id, candidate.vk_id)
         send_msg_func(vk, user_id, "⚠️ У кандидата нет доступных фото", get_main_keyboard())
         return handle_next_batch(db, vk, user_id, None, send_msg_func)
     

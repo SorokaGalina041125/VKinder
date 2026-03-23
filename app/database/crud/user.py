@@ -17,7 +17,7 @@ def get_or_create_user(db: Session, vk, vk_id: int) -> User:
     """Создание или получение пользователя бота"""
     user = db.get(User, vk_id)
     if not user:
-        user_info = vk.api.users.get(user_ids=vk_id)[0]
+        user_info = vk.users.get(user_ids=vk_id)[0]
         user = User(
             vk_id=vk_id,
             first_name=user_info.get('first_name', 'Пользователь'),

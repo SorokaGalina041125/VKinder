@@ -2,6 +2,7 @@
 Главный обработчик сообщений с использованием роутера.
 Регистрация маршрутов происходит один раз при импорте модуля.
 """
+import json
 import logging
 from app.database import crud
 from app.bot.utils import send_msg, get_last_candidate_id
@@ -185,9 +186,20 @@ def handle_message(db, vk, event):
     Главный обработчик всех сообщений.
     Теперь максимально простой — только получает данные и передает роутеру.
     """
-    user_id = event.user_id
-    text = event.text or ""
-    payload = event.payload if hasattr(event, 'payload') else None
+    if hasattr(event, "message") and event.message:
+        user_id = event.message.get("from_id")
+        text = event.message.get("text", "") or ""
+        payload = event.message.get("payload")
+    else:
+        user_id = event.user_id
+        text = event.text or ""
+        payload = event.payload if hasattr(event, 'payload') else None
+
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except json.JSONDecodeError:
+            payload = None
     
     logger.info(f"Сообщение от {user_id}: '{text[:50]}'")
     

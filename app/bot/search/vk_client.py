@@ -16,6 +16,10 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
+class InvalidUserTokenError(Exception):
+    """Raised when VK user token is invalid or expired."""
+
+
 def retry_on_flood(max_retries: int = 3, delay: float = 1.0):
     """Декоратор для повторных попыток при Flood Control"""
     def decorator(func):
@@ -25,6 +29,8 @@ def retry_on_flood(max_retries: int = 3, delay: float = 1.0):
                 try:
                     return func(self, *args, **kwargs)
                 except ApiError as e:
+                    if e.code == 5:
+                        raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
                     if e.code == 6:  # Flood control
                         wait = delay * (2 ** attempt)
                         logger.warning(f"Flood control, waiting {wait}s...")
@@ -70,6 +76,8 @@ class VKClient:
             )
             return result.get('items', [])
         except ApiError as e:
+            if e.code == 5:
+                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
             if e.code == 30:  # Profile is private
                 logger.debug(f"Profile {owner_id} is private")
             else:
@@ -88,6 +96,8 @@ class VKClient:
             )
             return result.get('items', [])
         except ApiError as e:
+            if e.code == 5:
+                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
             logger.error(f"Error getting groups for {user_id}: {e}")
             return []
     
@@ -101,6 +111,8 @@ class VKClient:
             )
             return result.get('items', [])
         except ApiError as e:
+            if e.code == 5:
+                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
             logger.error(f"Error getting members of group {group_id}: {e}")
             return []
     
@@ -128,6 +140,11 @@ class VKClient:
                 logger.warning(f"City '{city_name}' not found")
                 return None
                 
+        except ApiError as e:
+            if e.code == 5:
+                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
+            logger.error(f"Error getting city ID for '{city_name}': {e}")
+            return None
         except Exception as e:
             logger.error(f"Error getting city ID for '{city_name}': {e}")
             return None
@@ -143,6 +160,8 @@ class VKClient:
             )
             return True
         except ApiError as e:
+            if e.code == 5:
+                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
             if e.code == 15:  # Access denied
                 logger.debug(f"Access denied to like photo {owner_id}_{item_id}")
             elif e.code == 9:  # Already liked
@@ -162,6 +181,8 @@ class VKClient:
             )
             return True
         except ApiError as e:
+            if e.code == 5:
+                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
             logger.error(f"Error removing like: {e}")
             return False
     
@@ -172,6 +193,8 @@ class VKClient:
             logger.debug(f"Execute script executed successfully")
             return result
         except ApiError as e:
+            if e.code == 5:
+                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
             logger.error(f"Execute script error: {e}")
             return None
     
@@ -181,13 +204,15 @@ class VKClient:
         escaped = escaped.replace('"', '\\"')
         return escaped
     
-    def search_bulk(self, params: dict, limit: int = 1000) -> List[Dict]:
+    def search_bulk(self, params: dict, limit: int = 1000, start_offset: int = 0) -> List[Dict]:
         """
         Массовый поиск кандидатов через execute.
         Один вызов заменяет до 25 обычных запросов.
         """
         param_strs = []
         for key, value in params.items():
+            if key == 'offset':
+                continue
             if value:
                 if isinstance(value, str):
                     escaped = self._escape_string(value)
@@ -196,11 +221,11 @@ class VKClient:
                     param_strs.append(f'"{key}": {value}')
         
         params_str = ", ".join(param_strs)
-        max_offset = min(limit, 2500)
+        max_offset = min(start_offset + limit, start_offset + 2500)
         
         script = f"""
         var users = [];
-        var offset = 0;
+        var offset = {start_offset};
         var batch_size = 100;
         
         while (offset < {max_offset}) {{

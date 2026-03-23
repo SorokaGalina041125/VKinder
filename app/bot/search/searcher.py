@@ -47,7 +47,8 @@ class CandidateSearcher:
         context = SearchContext(
             user_id=user_id,
             criteria=criteria,
-            limit=batch_size * 3
+            limit=batch_size * 3,
+            offset=getattr(criteria, 'search_offset', 0)
         )
         
         candidates_data = self.provider.search(context)
@@ -69,7 +70,7 @@ class CandidateSearcher:
         
         # Сохраняем offset
         if hasattr(criteria, 'search_offset'):
-            save_search_offset(self.db, user_id, criteria.search_offset + len(candidates_data))
+            save_search_offset(self.db, user_id, context.offset + len(candidates_data))
         
         return saved_candidates, max(0, len(candidates_data) - len(saved_candidates))
     
