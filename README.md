@@ -233,3 +233,33 @@ VKinder/
 5. В `.env` корректный `VK_USER_TOKEN`
 6. PostgreSQL запущен и доступен
 7. В `bot.log` появляются новые записи после отправки сообщения
+
+---
+
+## Дополнения для проверки
+
+### Схема базы данных
+
+В репозиторий добавлен файл со схемой и связями таблиц: [database_schema.md](database_schema.md).
+
+### Запуск тестов через Docker Compose
+
+1. Поднять тестовую БД:
+
+```bash
+docker compose -f docker-compose.test.yml up -d
+```
+
+2. Запустить тесты:
+
+```bash
+pytest -v
+```
+
+3. Остановить тестовую БД:
+
+```bash
+docker compose -f docker-compose.test.yml down -v
+```
+
+Примечание: тестовый PostgreSQL стартует на порту `5433`.

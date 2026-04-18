@@ -26,6 +26,7 @@ class SearchContext:
     """Контекст поиска"""
     user_id: int
     criteria: any
+    city_id: Optional[int] = None
     limit: int = 100
     offset: int = 0
     exclude_viewed: bool = True
@@ -79,7 +80,9 @@ class ApiFastProvider(BaseProvider):
             params['age_from'] = context.criteria.age_from
         if context.criteria.age_to:
             params['age_to'] = context.criteria.age_to
-        if context.criteria.city_id:
+        if context.city_id:
+            params['city'] = context.city_id
+        elif context.criteria.city_id:
             params['city'] = context.criteria.city_id
         elif context.criteria.city:
             city_id = self.vk.get_city_id(context.criteria.city)
@@ -112,7 +115,9 @@ class ApiDeepProvider(BaseProvider):
             params['age_from'] = context.criteria.age_from
         if context.criteria.age_to:
             params['age_to'] = context.criteria.age_to
-        if context.criteria.city_id:
+        if context.city_id:
+            params['city'] = context.city_id
+        elif context.criteria.city_id:
             params['city'] = context.criteria.city_id
         elif context.criteria.city:
             city_id = self.vk.get_city_id(context.criteria.city)
@@ -274,6 +279,7 @@ class HybridProvider(BaseProvider):
             context_copy = SearchContext(
                 user_id=context.user_id,
                 criteria=context.criteria,
+                city_id=context.city_id,
                 limit=remaining * 2,
                 offset=context.offset,
             )

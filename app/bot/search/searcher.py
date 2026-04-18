@@ -47,6 +47,7 @@ class CandidateSearcher:
         context = SearchContext(
             user_id=user_id,
             criteria=criteria,
+            city_id=getattr(criteria, "city_id", None),
             limit=batch_size * 3,
             offset=getattr(criteria, 'search_offset', 0)
         )
@@ -82,6 +83,7 @@ class CandidateSearcher:
         try:
             # Сохраняем основную информацию
             candidate = register_candidate(self.db, data)
+            self.db.flush()
             
             # Собираем и сохраняем фото
             photos = self.vk.get_photos(data['id'])
@@ -100,7 +102,7 @@ class CandidateSearcher:
             return candidate
             
         except Exception as e:
-            logger.error(f"Error saving candidate {data.get('id')}: {e}")
+            logger.error(f"Error saving candidate {data.get('id')}: {e}", exc_info=True)
             self.db.rollback()
             return None
     

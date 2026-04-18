@@ -66,7 +66,10 @@ def run_bot() -> None:
 
         except Exception as e:
             user_id = getattr(getattr(event, "message", None), "from_id", None)
-            logger.error(f"Ошибка при обработке сообщения от {user_id}: {e}")
+            logger.error(
+                f"Ошибка при обработке сообщения от {user_id}: {e}",
+                exc_info=True,
+            )
 
 
 if __name__ == "__main__":
@@ -76,5 +79,5 @@ if __name__ == "__main__":
         logger.info("База данных готова")
         run_bot()
     except Exception as e:
-        logger.error(f"Ошибка при запуске: {e}")
+        logger.error(f"Ошибка при запуске: {e}", exc_info=True)
         raise
