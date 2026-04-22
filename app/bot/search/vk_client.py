@@ -20,6 +20,15 @@ class InvalidUserTokenError(Exception):
     """Raised when VK user token is invalid or expired."""
 
 
+def _is_user_token_error(error_code: int) -> bool:
+    """
+    VK API codes that indicate invalid user auth for methods requiring user token.
+    5  - user authorization failed / token invalid
+    27 - group token used where user token is required
+    """
+    return error_code in (5, 27)
+
+
 def retry_on_flood(max_retries: int = 3, delay: float = 1.0):
     """Декоратор для повторных попыток при Flood Control"""
     def decorator(func):
@@ -29,8 +38,10 @@ def retry_on_flood(max_retries: int = 3, delay: float = 1.0):
                 try:
                     return func(self, *args, **kwargs)
                 except ApiError as e:
-                    if e.code == 5:
-                        raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
+                    if _is_user_token_error(e.code):
+                        raise InvalidUserTokenError(
+                            "VK_USER_TOKEN невалиден, истек или не является пользовательским токеном"
+                        ) from e
                     if e.code == 6:  # Flood control
                         wait = delay * (2 ** attempt)
                         logger.warning(f"Flood control, waiting {wait}s...")
@@ -76,8 +87,10 @@ class VKClient:
             )
             return result.get('items', [])
         except ApiError as e:
-            if e.code == 5:
-                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
+            if _is_user_token_error(e.code):
+                raise InvalidUserTokenError(
+                    "VK_USER_TOKEN невалиден, истек или не является пользовательским токеном"
+                ) from e
             if e.code == 30:  # Profile is private
                 logger.debug(f"Profile {owner_id} is private")
             else:
@@ -96,8 +109,10 @@ class VKClient:
             )
             return result.get('items', [])
         except ApiError as e:
-            if e.code == 5:
-                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
+            if _is_user_token_error(e.code):
+                raise InvalidUserTokenError(
+                    "VK_USER_TOKEN невалиден, истек или не является пользовательским токеном"
+                ) from e
             logger.error(f"Error getting groups for {user_id}: {e}")
             return []
     
@@ -111,8 +126,10 @@ class VKClient:
             )
             return result.get('items', [])
         except ApiError as e:
-            if e.code == 5:
-                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
+            if _is_user_token_error(e.code):
+                raise InvalidUserTokenError(
+                    "VK_USER_TOKEN невалиден, истек или не является пользовательским токеном"
+                ) from e
             logger.error(f"Error getting members of group {group_id}: {e}")
             return []
     
@@ -141,8 +158,10 @@ class VKClient:
                 return None
                 
         except ApiError as e:
-            if e.code == 5:
-                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
+            if _is_user_token_error(e.code):
+                raise InvalidUserTokenError(
+                    "VK_USER_TOKEN невалиден, истек или не является пользовательским токеном"
+                ) from e
             logger.error(f"Error getting city ID for '{city_name}': {e}")
             return None
         except Exception as e:
@@ -160,8 +179,10 @@ class VKClient:
             )
             return True
         except ApiError as e:
-            if e.code == 5:
-                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
+            if _is_user_token_error(e.code):
+                raise InvalidUserTokenError(
+                    "VK_USER_TOKEN невалиден, истек или не является пользовательским токеном"
+                ) from e
             if e.code == 15:  # Access denied
                 logger.debug(f"Access denied to like photo {owner_id}_{item_id}")
             elif e.code == 9:  # Already liked
@@ -181,8 +202,10 @@ class VKClient:
             )
             return True
         except ApiError as e:
-            if e.code == 5:
-                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
+            if _is_user_token_error(e.code):
+                raise InvalidUserTokenError(
+                    "VK_USER_TOKEN невалиден, истек или не является пользовательским токеном"
+                ) from e
             logger.error(f"Error removing like: {e}")
             return False
     
@@ -193,8 +216,10 @@ class VKClient:
             logger.debug(f"Execute script executed successfully")
             return result
         except ApiError as e:
-            if e.code == 5:
-                raise InvalidUserTokenError("VK_USER_TOKEN невалиден или истек") from e
+            if _is_user_token_error(e.code):
+                raise InvalidUserTokenError(
+                    "VK_USER_TOKEN невалиден, истек или не является пользовательским токеном"
+                ) from e
             logger.error(f"Execute script error: {e}")
             return None
     

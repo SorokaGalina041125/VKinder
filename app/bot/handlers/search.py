@@ -19,7 +19,7 @@ def _handle_invalid_user_token(vk, user_id, send_msg_func):
     send_msg_func(
         vk,
         user_id,
-        "VK_USER_TOKEN недействителен или истек. Обновите пользовательский токен в `.env` и перезапустите бота.",
+        "VK_USER_TOKEN недействителен, истек или указан токен сообщества. Укажите пользовательский токен в `.env` и перезапустите бота.",
         get_main_keyboard()
     )
 
